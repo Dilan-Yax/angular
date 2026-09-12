@@ -1,0 +1,45 @@
+@if (producto(); as producto) {
+  <section class="detalle">
+    <h2 class="detalle__titulo">{{ producto.nombre }}</h2>
+    <p class="text-muted">{{ producto.descripcion }}</p>
+
+    <dl class="detalle__lista">
+      <div class="detalle__fila">
+        <dt>ID</dt>
+        <dd>{{ producto.id }}</dd>
+      </div>
+      <div class="detalle__fila">
+        <dt>Categoría</dt>
+        <dd>{{ producto.categoria }}</dd>
+      </div>
+      <div class="detalle__fila">
+        <dt>Precio</dt>
+        <dd>{{ producto.precio | currency }}</dd>
+      </div>
+      <div class="detalle__fila">
+        <dt>Stock</dt>
+        <dd>{{ producto.stock }} unidades</dd>
+      </div>
+      <div class="detalle__fila">
+        <dt>Estado</dt>
+        <dd>
+          <span class="badge badge--{{ producto.estado }}">
+            {{ producto.estado }}
+          </span>
+        </dd>
+      </div>
+    </dl>
+
+    <a class="btn btn-outline-primary detalle__volver" routerLink="/productos">
+      Volver al catálogo
+    </a>
+  </section>
+} @else {
+  <section class="detalle detalle--sin-resultados">
+    <h2>Producto no encontrado</h2>
+    <p class="text-muted">
+      No existe un producto con el ID solicitado.
+    </p>
+    <a class="btn btn-primary" routerLink="/productos">Volver al catálogo</a>
+  </section>
+}

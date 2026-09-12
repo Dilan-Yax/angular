@@ -38,3 +38,4 @@ pro-angular/
 - Utilizar componentes Standalone cuando sea aplicable.
 - Para maquetación visual y componentes responsivos, usar clases nativas de Bootstrap 5 (ej. `container`, `row`, `col`, `btn-primary`, `table`, `card`).
 - Mantener tipado estricto en TypeScript sin uso innecesario de `any`.
+
