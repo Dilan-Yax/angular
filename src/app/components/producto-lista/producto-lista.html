@@ -1,0 +1,45 @@
+<div class="listado">
+  <header class="listado__header">
+    <h2>Catálogo de Productos</h2>
+    <p class="text-muted mb-0">
+      Total de productos: <strong>{{ productos().length }}</strong>
+    </p>
+  </header>
+
+  @if (productos().length === 0) {
+    <p class="listado__vacio">No hay productos registrados.</p>
+  } @else {
+    <div class="row g-3">
+      @for (producto of productos(); track producto.id) {
+        <div class="col-12 col-md-6 col-lg-4">
+          <article class="producto-card">
+            <span
+              class="producto-card__badge producto-card__badge--{{ producto.estado }}"
+            >
+              {{ producto.estado }}
+            </span>
+            <h3 class="producto-card__titulo">{{ producto.nombre }}</h3>
+            <p class="producto-card__descripcion">{{ producto.descripcion }}</p>
+            <div class="producto-card__meta">
+              <span class="producto-card__categoria">
+                {{ producto.categoria }}
+              </span>
+              <span class="producto-card__precio">
+                {{ producto.precio | currency }}
+              </span>
+            </div>
+            <p class="producto-card__stock">
+              Stock: {{ producto.stock }} unidades
+            </p>
+            <a
+              class="btn btn-primary"
+              [routerLink]="['/productos', producto.id]"
+            >
+              Ver detalle
+            </a>
+          </article>
+        </div>
+      }
+    </div>
+  }
+</div>

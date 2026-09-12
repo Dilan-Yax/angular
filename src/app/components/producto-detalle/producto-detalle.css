@@ -1,0 +1,63 @@
+.detalle {
+  max-width: 640px;
+  margin: 1rem auto;
+  padding: 2rem;
+  background: #ffffff;
+  border: 1px solid #e9ecef;
+  border-radius: 1rem;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 6%);
+}
+
+.detalle--sin-resultados {
+  text-align: center;
+}
+
+.detalle__titulo {
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.detalle__lista {
+  margin: 1.5rem 0;
+  border-top: 1px solid #e9ecef;
+}
+
+.detalle__fila {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.detalle__fila dt {
+  font-weight: 600;
+  color: #495057;
+}
+
+.detalle__fila dd {
+  margin: 0;
+  font-weight: 500;
+}
+
+.badge {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  border-radius: 999px;
+}
+
+.badge--disponible {
+  color: #146c43;
+  background: #d1e7dd;
+}
+
+.badge--agotado {
+  color: #b02a37;
+  background: #f8d7da;
+}
+
+.detalle__volver {
+  margin-top: 0.5rem;
+}
