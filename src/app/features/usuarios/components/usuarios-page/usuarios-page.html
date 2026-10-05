@@ -1,0 +1,119 @@
+<div class="panel mb-4">
+  <div>
+    <h2 class="panel__titulo">Gestión de Usuarios</h2>
+    <p class="panel__subtitulo mb-0">
+      Administración del módulo de usuarios
+      <span class="panel__rol">{{ totalItems() }} registrados</span>
+    </p>
+  </div>
+  <div class="panel__acciones">
+    <button
+      class="btn-exportar"
+      type="button"
+      (click)="onExportar('csv')"
+      [disabled]="exportando() !== null"
+    >
+      @if (exportando() === 'csv') {
+        <span class="btn-spinner btn-spinner--oscuro" aria-hidden="true"></span>
+      } @else {
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+      }
+      Exportar CSV
+    </button>
+
+    <button
+      class="btn-exportar"
+      type="button"
+      (click)="onExportar('excel')"
+      [disabled]="exportando() !== null"
+    >
+      @if (exportando() === 'excel') {
+        <span class="btn-spinner btn-spinner--oscuro" aria-hidden="true"></span>
+      } @else {
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="18" rx="2"/>
+          <line x1="8" y1="8" x2="16" y2="8"/>
+          <line x1="8" y1="12" x2="16" y2="12"/>
+          <line x1="8" y1="16" x2="12" y2="16"/>
+        </svg>
+      }
+      Exportar Excel
+    </button>
+
+    <button class="btn-primario" type="button" (click)="onNuevo()">
+      <svg class="btn-primario__icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19" />
+        <line x1="5" y1="12" x2="19" y2="12" />
+      </svg>
+      Nuevo usuario
+    </button>
+  </div>
+</div>
+
+@if (error(); as mensaje) {
+  <div class="alerta mb-4" role="alert">
+    <span>{{ mensaje }}</span>
+    <button class="alerta__cerrar" type="button" (click)="error.set(null)">×</button>
+  </div>
+}
+
+@if (mostrarFormulario()) {
+  <div class="mb-4">
+    <app-formulario-usuario
+      [usuario]="usuarioEnEdicion()"
+      [guardando]="guardando()"
+      [error]="errorForm()"
+      (guardar)="onGuardar($event)"
+      (cancelar)="onCancelarFormulario()"
+      (dirtyChange)="onDirtyChange($event)"
+    ></app-formulario-usuario>
+  </div>
+}
+
+<app-filtros-usuarios
+  (aplicarFiltros)="onAplicarFiltros($event)"
+  (limpiarFiltros)="onLimpiarFiltros()"
+></app-filtros-usuarios>
+
+@if (cargando()) {
+  <div class="seccion">
+    <p class="seccion__vacio mb-0">Cargando usuarios...</p>
+  </div>
+} @else {
+  <div class="seccion">
+    <div class="seccion__cabecera">
+      <h3 class="seccion__titulo">Lista de usuarios</h3>
+      <span class="seccion__detalle">{{ totalItems() }} usuarios</span>
+    </div>
+
+    <app-tabla-usuarios
+      [usuarios]="usuarios()"
+      [sortBy]="filtros().sortBy ?? null"
+      [isAscending]="filtros().isAscending"
+      [desactivandoId]="desactivandoId()"
+      (ordenar)="onOrdenar($event)"
+      (verDetalle)="onVerDetalle($event)"
+      (editar)="onEditar($event)"
+      (desactivar)="onDesactivar($event)"
+    ></app-tabla-usuarios>
+
+    <app-paginador
+      [page]="filtros().page"
+      [pageSize]="filtros().pageSize"
+      [totalItems]="totalItems()"
+      [totalPages]="totalPages()"
+      (cambiarPagina)="onCambiarPagina($event)"
+      (cambiarTamano)="onCambiarTamano($event)"
+    ></app-paginador>
+  </div>
+}
+
+@if (mostrarDetalle() && usuarioDetalle(); as detalle) {
+  <app-detalle-usuario
+    [usuario]="detalle"
+    (cerrar)="onCerrarDetalle()"
+  ></app-detalle-usuario>
+}

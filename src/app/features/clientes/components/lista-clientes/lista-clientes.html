@@ -1,0 +1,70 @@
+<div class="table-responsive">
+  <table class="tabla align-middle">
+    <thead>
+      <tr>
+        <th>Cliente</th>
+        <th>Documento</th>
+        <th>Teléfono</th>
+        <th>Email</th>
+        <th>Dirección</th>
+        <th class="text-center">Estado</th>
+        <th class="text-end">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (cliente of clientes; track cliente.id) {
+        <tr>
+          <td>
+            <span class="tabla__nombre">{{ cliente.nombre }}</span>
+          </td>
+          <td>
+            <span class="tabla__categoria">{{ cliente.documento ?? '—' }}</span>
+          </td>
+          <td><span class="tabla__descripcion">{{ cliente.telefono ?? '—' }}</span></td>
+          <td><span class="tabla__descripcion">{{ cliente.email ?? '—' }}</span></td>
+          <td><span class="tabla__descripcion">{{ cliente.direccion ?? '—' }}</span></td>
+          <td class="text-center">
+            <span
+              class="estado"
+              [class.estado--ok]="cliente.isActive"
+              [class.estado--alerta]="!cliente.isActive"
+            >{{ cliente.isActive ? 'Activo' : 'Inactivo' }}</span>
+          </td>
+          <td class="text-end">
+            <div class="acciones">
+              <button
+                class="btn-accion btn-accion--editar"
+                type="button"
+                (click)="editarCliente.emit(cliente)"
+                [attr.aria-label]="'Editar ' + cliente.nombre"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 3a2.85 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5z"/>
+                </svg>
+                Editar
+              </button>
+              <button
+                class="btn-accion btn-accion--eliminar"
+                type="button"
+                (click)="eliminarCliente.emit(cliente)"
+                [attr.aria-label]="'Eliminar ' + cliente.nombre"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                </svg>
+                Eliminar
+              </button>
+            </div>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="7" class="text-center">
+            <p class="seccion__vacio mb-0">No hay clientes registrados.</p>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

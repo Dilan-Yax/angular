@@ -1,35 +1,9 @@
-<nav class="navbar navbar-expand-lg navbar-dark">
-  <div class="container">
-    <a class="navbar-brand" routerLink="/">{{ title() }}</a>
-    <button
-      class="navbar-toggler"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#navPrincipal"
-      aria-controls="navPrincipal"
-      aria-expanded="false"
-      aria-label="Alternar navegación"
-    >
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navPrincipal">
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/productos" routerLinkActive="active">
-            Productos
-          </a>
-        </li>
-      </ul>
-    </div>
-  </div>
-</nav>
-
-<main class="container my-4">
+@if (enLogin()) {
   <router-outlet />
-</main>
+} @else {
+  <app-sidebar></app-sidebar>
 
-<footer class="footer">
-  <div class="container">
-    <span class="text-muted">© {{ anio }} — {{ title() }}</span>
-  </div>
-</footer>
+  <main class="main-content">
+    <router-outlet />
+  </main>
+}

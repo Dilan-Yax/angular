@@ -16,12 +16,11 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render brand title', async () => {
+  it('should start on the login route', () => {
     const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.navbar-brand')?.textContent).toContain(
-      'Pro Angular',
-    );
+    const app = fixture.componentInstance as unknown as {
+      enLogin: () => boolean;
+    };
+    expect(app.enLogin()).toBe(true);
   });
 });

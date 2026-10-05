@@ -1,0 +1,110 @@
+<div class="seccion">
+  <div class="seccion__cabecera">
+    <h3 class="seccion__titulo">
+      {{ cliente() ? 'Editar cliente' : 'Nuevo cliente' }}
+    </h3>
+    <button class="btn-link" type="button" (click)="cancelar.emit()">Cerrar</button>
+  </div>
+
+  @if (error(); as mensaje) {
+    <div class="form-alerta" role="alert">
+      <svg class="form-alerta__icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+      <span>{{ mensaje }}</span>
+    </div>
+  }
+
+  <form [formGroup]="formulario" (ngSubmit)="enviarLocal()" novalidate>
+    <div class="row g-3">
+      <div class="col-12 col-md-6">
+        <label class="form-etiqueta" for="nombre">Nombre *</label>
+        <input
+          id="nombre"
+          class="form-input"
+          [class.form-input--invalid]="esInvalido('nombre')"
+          type="text"
+          formControlName="nombre"
+          placeholder="Nombre del cliente"
+        />
+        @if (esInvalido('nombre')) {
+          <p class="form-error">El nombre es obligatorio (máximo 150 caracteres).</p>
+        }
+      </div>
+
+      <div class="col-12 col-md-6">
+        <label class="form-etiqueta" for="documento">Documento (NIT/CUI)</label>
+        <input
+          id="documento"
+          class="form-input"
+          [class.form-input--invalid]="esInvalido('documento')"
+          type="text"
+          formControlName="documento"
+          placeholder="Ej. 12345678-9"
+        />
+        @if (esInvalido('documento')) {
+          <p class="form-error">Máximo 20 caracteres.</p>
+        }
+      </div>
+
+      <div class="col-12 col-md-6">
+        <label class="form-etiqueta" for="telefono">Teléfono</label>
+        <input
+          id="telefono"
+          class="form-input"
+          [class.form-input--invalid]="esInvalido('telefono')"
+          type="tel"
+          formControlName="telefono"
+          placeholder="Ej. 5555-1234"
+        />
+        @if (esInvalido('telefono')) {
+          <p class="form-error">Máximo 20 caracteres.</p>
+        }
+      </div>
+
+      <div class="col-12 col-md-6">
+        <label class="form-etiqueta" for="email">Email</label>
+        <input
+          id="email"
+          class="form-input"
+          [class.form-input--invalid]="esInvalido('email')"
+          type="email"
+          formControlName="email"
+          placeholder="cliente@correo.com"
+        />
+        @if (esInvalido('email')) {
+          <p class="form-error">Ingresa un correo válido (máximo 150 caracteres).</p>
+        }
+      </div>
+
+      <div class="col-12">
+        <label class="form-etiqueta" for="direccion">Dirección</label>
+        <input
+          id="direccion"
+          class="form-input"
+          [class.form-input--invalid]="esInvalido('direccion')"
+          type="text"
+          formControlName="direccion"
+          placeholder="Dirección del cliente"
+        />
+        @if (esInvalido('direccion')) {
+          <p class="form-error">Máximo 255 caracteres.</p>
+        }
+      </div>
+    </div>
+
+    <div class="form-acciones">
+      <button class="btn-secundario" type="button" (click)="cancelar.emit()">Cancelar</button>
+      <button class="btn-primario" type="submit" [disabled]="guardando()">
+        @if (guardando()) {
+          <span class="btn-spinner" aria-hidden="true"></span>
+          <span>Guardando...</span>
+        } @else {
+          <span>{{ cliente() ? 'Guardar cambios' : 'Crear cliente' }}</span>
+        }
+      </button>
+    </div>
+  </form>
+</div>

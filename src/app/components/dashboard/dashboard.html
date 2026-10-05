@@ -1,0 +1,238 @@
+<!-- ══ Panel superior ══════════════════════════════════════════════ -->
+<div class="panel mb-4">
+  <div>
+    <h2 class="panel__titulo">Panel de control</h2>
+    <p class="panel__subtitulo mb-0">
+      Bienvenido, <strong>{{ usuario()?.userName }}</strong>
+      <span class="panel__rol">{{ usuario()?.role }}</span>
+    </p>
+  </div>
+  <div>
+    <span class="panel__fecha-dia">{{ fechaActual | date: 'EEEE, d MMMM yyyy' : undefined : 'es' }}</span>
+    <span class="panel__fecha-hora">Punto de venta — Pro POS</span>
+  </div>
+</div>
+
+<!-- ══ KPIs ════════════════════════════════════════════════════════ -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="kpi">
+      <span class="kpi__icono kpi__icono--azul">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+        </svg>
+      </span>
+      <div>
+        <p class="kpi__valor">{{ totalProductos() }}</p>
+        <p class="kpi__etiqueta">Productos</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-lg-3">
+    <div class="kpi">
+      <span class="kpi__icono kpi__icono--verde">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </span>
+      <div>
+        <p class="kpi__valor kpi__valor--verde">{{ disponibles() }}</p>
+        <p class="kpi__etiqueta">Disponibles</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-lg-3">
+    <div class="kpi">
+      <span class="kpi__icono kpi__icono--rojo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </span>
+      <div>
+        <p class="kpi__valor kpi__valor--rojo">{{ agotados() }}</p>
+        <p class="kpi__etiqueta">Agotados</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-lg-3">
+    <div class="kpi">
+      <span class="kpi__icono kpi__icono--morado">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="1" x2="12" y2="23"/>
+          <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+        </svg>
+      </span>
+      <div>
+        <p class="kpi__valor kpi__valor--morado">{{ formatearMoneda(valorInventario()) }}</p>
+        <p class="kpi__etiqueta">Valor del inventario</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Fila principal: tabla + reposición ══════════════════════════ -->
+<div class="row g-3 mb-4">
+  <div class="col-12 col-lg-8">
+    <div class="seccion">
+      <div class="seccion__cabecera">
+        <h3 class="seccion__titulo">Inventario</h3>
+        <span class="seccion__detalle">{{ stockTotal() }} uds. en stock</span>
+      </div>
+      <div class="table-responsive">
+        <table class="tabla align-middle">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Categoría</th>
+              <th class="text-end">Precio</th>
+              <th class="text-center">Stock</th>
+              <th class="text-center">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (producto of productos(); track producto.id) {
+              <tr>
+                <td>
+                  <span class="tabla__nombre">{{ producto.nombre }}</span>
+                  <span class="tabla__descripcion">{{ producto.descripcion }}</span>
+                </td>
+                <td><span class="tabla__categoria">{{ producto.categoria }}</span></td>
+                <td class="text-end tabla__precio">{{ formatearMoneda(producto.precio) }}</td>
+                <td class="text-center">
+                  <span
+                    class="tabla__stock"
+                    [class.tabla__stock--bajo]="producto.stock > 0 && producto.stock <= 5"
+                    [class.tabla__stock--agotado]="producto.stock === 0"
+                  >{{ producto.stock }}</span>
+                </td>
+                <td class="text-center">
+                  <span class="estado"
+                    [class.estado--ok]="producto.estado === 'disponible'"
+                    [class.estado--alerta]="producto.estado === 'agotado'"
+                  >{{ producto.estado === 'disponible' ? 'Disponible' : 'Agotado' }}</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-4">
+    <div class="seccion">
+      <div class="seccion__cabecera">
+        <h3 class="seccion__titulo">Requieren reposición</h3>
+        <span class="seccion__detalle">{{ alertaStock().length + agotados() }} productos</span>
+      </div>
+      @if (alertaStock().length === 0 && agotados() === 0) {
+        <p class="seccion__vacio">Todo el inventario está en niveles óptimos.</p>
+      }
+      <ul class="reposicion">
+        @for (p of alertaStock(); track p.id) {
+          <li class="reposicion__item">
+            <span class="reposicion__punto reposicion__punto--bajo"></span>
+            <div>
+              <span class="tabla__nombre">{{ p.nombre }}</span>
+              <span class="tabla__descripcion">Quedan {{ p.stock }} unidades</span>
+            </div>
+          </li>
+        }
+        @for (p of productos(); track p.id) {
+          @if (p.estado === 'agotado') {
+            <li class="reposicion__item">
+              <span class="reposicion__punto reposicion__punto--agotado"></span>
+              <div>
+                <span class="tabla__nombre">{{ p.nombre }}</span>
+                <span class="tabla__descripcion">Sin existencias</span>
+              </div>
+            </li>
+          }
+        }
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Fila gráficas ═══════════════════════════════════════════════ -->
+<div class="row g-3">
+  <!-- Gráfica barras: Stock por categoría -->
+  <div class="col-12 col-lg-7">
+    <div class="seccion">
+      <div class="seccion__cabecera">
+        <h3 class="seccion__titulo">Stock por categoría</h3>
+        <span class="seccion__detalle">{{ stockTotal() }} uds. totales</span>
+      </div>
+      <div class="grafica-barras">
+        @for (cat of barrasCategorias(); track cat.nombre) {
+          <div class="barra-item">
+            <span class="barra-label">{{ cat.nombre }}</span>
+            <div class="barra-track">
+              <div class="barra-fill" [style.width.%]="cat.pct"></div>
+            </div>
+            <span class="barra-valor">{{ cat.stock }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráfica donut: Disponibles vs Agotados -->
+  <div class="col-12 col-lg-5">
+    <div class="seccion">
+      <div class="seccion__cabecera">
+        <h3 class="seccion__titulo">Estado del inventario</h3>
+        <span class="seccion__detalle">{{ totalProductos() }} referencias</span>
+      </div>
+      <div class="donut-wrap">
+        <svg class="donut-svg" width="110" height="110" viewBox="0 0 100 100">
+          <!-- Track -->
+          <circle cx="50" cy="50" r="40" fill="none" stroke="#f1f5f9" stroke-width="14"/>
+          <!-- Disponibles (indigo) -->
+          <circle cx="50" cy="50" r="40" fill="none"
+            stroke="#6366f1" stroke-width="14"
+            stroke-linecap="round"
+            [attr.stroke-dasharray]="donutArcDisp()"
+            stroke-dashoffset="0"
+            transform="rotate(-90 50 50)"
+          />
+          <!-- Agotados (rojo) -->
+          <circle cx="50" cy="50" r="40" fill="none"
+            stroke="#ef4444" stroke-width="14"
+            stroke-linecap="round"
+            [attr.stroke-dasharray]="donutArcAgot()"
+            [attr.stroke-dashoffset]="donutOffset()"
+            transform="rotate(-90 50 50)"
+          />
+          <!-- Etiqueta central -->
+          <text x="50" y="47" text-anchor="middle" font-size="13" font-weight="800" fill="#0f172a">
+            {{ totalProductos() }}
+          </text>
+          <text x="50" y="60" text-anchor="middle" font-size="7.5" fill="#94a3b8">productos</text>
+        </svg>
+        <div class="donut-leyenda">
+          <div class="donut-leyenda-item">
+            <span class="donut-dot" style="background:#6366f1"></span>
+            <span class="donut-nombre">Disponibles</span>
+            <span class="donut-pct">{{ disponibles() }} ({{ donutDisponibles() }}%)</span>
+          </div>
+          <div class="donut-leyenda-item">
+            <span class="donut-dot" style="background:#ef4444"></span>
+            <span class="donut-nombre">Agotados</span>
+            <span class="donut-pct">{{ agotados() }} ({{ donutAgotados() }}%)</span>
+          </div>
+          <div class="donut-leyenda-item" style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid #f1f5f9">
+            <span class="donut-dot" style="background:#10b981"></span>
+            <span class="donut-nombre">Stock total</span>
+            <span class="donut-pct">{{ stockTotal() }} uds.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

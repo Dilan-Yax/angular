@@ -1,0 +1,55 @@
+<div class="panel mb-4">
+  <div>
+    <h2 class="panel__titulo">Gestión de Clientes</h2>
+    <p class="panel__subtitulo mb-0">
+      Catálogo de clientes del punto de venta
+      <span class="panel__rol">{{ clientes().length }} registrados</span>
+    </p>
+  </div>
+  <div>
+    <button class="btn-primario" type="button" (click)="onNuevo()">
+      <svg class="btn-primario__icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19" />
+        <line x1="5" y1="12" x2="19" y2="12" />
+      </svg>
+      Nuevo cliente
+    </button>
+  </div>
+</div>
+
+@if (error(); as mensaje) {
+  <div class="alerta mb-4" role="alert">
+    <span>{{ mensaje }}</span>
+    <button class="alerta__cerrar" type="button" (click)="error.set(null)">×</button>
+  </div>
+}
+
+@if (mostrarFormulario()) {
+  <div class="mb-4">
+    <app-formulario-cliente
+      [cliente]="clienteEnEdicion()"
+      [guardando]="guardando()"
+      [error]="errorForm()"
+      (guardar)="onGuardar($event)"
+      (cancelar)="onCancelar()"
+    ></app-formulario-cliente>
+  </div>
+}
+
+@if (loading()) {
+  <div class="seccion">
+    <p class="seccion__vacio mb-0">Cargando clientes...</p>
+  </div>
+} @else {
+  <div class="seccion">
+    <div class="seccion__cabecera">
+      <h3 class="seccion__titulo">Lista de clientes</h3>
+      <span class="seccion__detalle">{{ clientes().length }} clientes</span>
+    </div>
+    <app-lista-clientes
+      [clientes]="clientes()"
+      (editarCliente)="onEditar($event)"
+      (eliminarCliente)="onEliminar($event)"
+    ></app-lista-clientes>
+  </div>
+}

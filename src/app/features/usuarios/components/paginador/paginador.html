@@ -1,0 +1,41 @@
+<nav class="paginador" aria-label="Paginación de usuarios">
+  <div class="paginador__info">
+    <label class="paginador__etiqueta" for="pageSize">Filas por página</label>
+    <select
+      id="pageSize"
+      class="paginador__select"
+      [ngModel]="pageSize"
+      (ngModelChange)="cambiarTamano.emit($event)"
+    >
+      @for (opcion of opcionesTamano; track opcion) {
+        <option [ngValue]="opcion">{{ opcion }}</option>
+      }
+    </select>
+  </div>
+
+  <span class="paginador__rango">{{ rangoInfo() }}</span>
+
+  <div class="paginador__controles">
+    <button
+      class="paginador__btn"
+      type="button"
+      (click)="cambiarPagina.emit(page - 1)"
+      [disabled]="page <= 1"
+    >
+      ← Anterior
+    </button>
+
+    <span class="paginador__actual">
+      Página {{ page }} de {{ totalPages }}
+    </span>
+
+    <button
+      class="paginador__btn"
+      type="button"
+      (click)="cambiarPagina.emit(page + 1)"
+      [disabled]="page >= totalPages"
+    >
+      Siguiente →
+    </button>
+  </div>
+</nav>

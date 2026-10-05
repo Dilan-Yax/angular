@@ -1,0 +1,84 @@
+@if (usuario; as u) {
+  <div
+    class="modal-backdrop"
+    role="presentation"
+    (click)="onFondo()"
+  >
+    <div
+      class="modal-card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="detalle-usuario-titulo"
+      (click)="$event.stopPropagation()"
+      (keydown.esc)="cerrar.emit()"
+    >
+      <div class="modal-card__cabecera">
+        <div>
+          <h3 id="detalle-usuario-titulo" class="modal-card__titulo">Detalle del usuario</h3>
+          <span class="modal-card__subtitulo">@{{ u.userName }}</span>
+        </div>
+        <button
+          class="modal-card__cerrar"
+          type="button"
+          (click)="cerrar.emit()"
+          aria-label="Cerrar detalle"
+        >
+          ×
+        </button>
+      </div>
+
+      <div class="modal-card__cuerpo">
+        <dl class="ficha">
+          <div class="ficha__fila">
+            <dt class="ficha__etiqueta">Nombre completo</dt>
+            <dd class="ficha__valor">{{ u.nombre }} {{ u.apellido }}</dd>
+          </div>
+          <div class="ficha__fila">
+            <dt class="ficha__etiqueta">Username</dt>
+            <dd class="ficha__valor">@{{ u.userName }}</dd>
+          </div>
+          <div class="ficha__fila">
+            <dt class="ficha__etiqueta">Email</dt>
+            <dd class="ficha__valor">{{ u.email }}</dd>
+          </div>
+          <div class="ficha__fila">
+            <dt class="ficha__etiqueta">Rol</dt>
+            <dd class="ficha__valor">
+              <span class="tabla__categoria">{{ u.rolNombre }}</span>
+            </dd>
+          </div>
+          <div class="ficha__fila">
+            <dt class="ficha__etiqueta">Estado</dt>
+            <dd class="ficha__valor">
+              <span
+                class="estado"
+                [class.estado--ok]="u.isActive"
+                [class.estado--alerta]="!u.isActive"
+              >{{ u.isActive ? 'Activo' : 'Inactivo' }}</span>
+            </dd>
+          </div>
+          <div class="ficha__fila">
+            <dt class="ficha__etiqueta">Último login</dt>
+            <dd class="ficha__valor">
+              {{ u.ultimoLogin ? (u.ultimoLogin | date: 'dd/MM/yyyy HH:mm') : '—' }}
+            </dd>
+          </div>
+          <div class="ficha__fila">
+            <dt class="ficha__etiqueta">Fecha de registro</dt>
+            <dd class="ficha__valor">{{ u.createdAtUtc | date: 'dd/MM/yyyy HH:mm' }}</dd>
+          </div>
+          <div class="ficha__fila">
+            <dt class="ficha__etiqueta">Última actualización</dt>
+            <dd class="ficha__valor">
+              {{ u.updatedAtUtc ? (u.updatedAtUtc | date: 'dd/MM/yyyy HH:mm') : '—' }}
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      <div class="modal-card__pie">
+        <button class="btn-secundario" type="button" (click)="cerrar.emit()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}

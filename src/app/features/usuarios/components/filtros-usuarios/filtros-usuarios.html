@@ -1,0 +1,68 @@
+<section class="seccion mb-4" aria-label="Filtros de usuarios">
+  <div class="seccion__cabecera">
+    <h3 class="seccion__titulo">Filtros</h3>
+    <span class="seccion__detalle">Busca, filtra y ordena los usuarios</span>
+  </div>
+
+  <form [formGroup]="formulario" (ngSubmit)="enviar()" novalidate>
+    <div class="row g-3 align-items-end">
+      <div class="col-12 col-md-4">
+        <label class="form-etiqueta" for="searchTerm">Búsqueda</label>
+        <input
+          id="searchTerm"
+          class="form-input"
+          type="search"
+          formControlName="searchTerm"
+          placeholder="Buscar por nombre o username"
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="col-6 col-md-2">
+        <label class="form-etiqueta" for="rolId">Rol</label>
+        <select id="rolId" class="form-input" formControlName="rolId">
+          <option [ngValue]="null">Todos</option>
+          @for (rol of roles; track rol.id) {
+            <option [ngValue]="rol.id">{{ rol.nombre }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="col-6 col-md-2">
+        <label class="form-etiqueta" for="isActive">Estado</label>
+        <select id="isActive" class="form-input" formControlName="isActive">
+          <option value="">Todos</option>
+          <option value="true">Activo</option>
+          <option value="false">Inactivo</option>
+        </select>
+      </div>
+
+      <div class="col-6 col-md-2">
+        <label class="form-etiqueta" for="fechaDesde">Desde</label>
+        <input
+          id="fechaDesde"
+          class="form-input"
+          type="date"
+          formControlName="fechaDesde"
+        />
+      </div>
+
+      <div class="col-6 col-md-2">
+        <label class="form-etiqueta" for="fechaHasta">Hasta</label>
+        <input
+          id="fechaHasta"
+          class="form-input"
+          type="date"
+          formControlName="fechaHasta"
+        />
+      </div>
+    </div>
+
+    <div class="form-acciones">
+      <button class="btn-secundario" type="button" (click)="limpiar()">
+        Limpiar filtros
+      </button>
+      <button class="btn-primario" type="submit">Buscar</button>
+    </div>
+  </form>
+</section>

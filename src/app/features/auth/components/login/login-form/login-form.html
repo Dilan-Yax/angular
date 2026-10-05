@@ -1,0 +1,197 @@
+<main class="login">
+  <div class="login__fondo" aria-hidden="true">
+    <span class="login__brillo login__brillo--uno"></span>
+    <span class="login__brillo login__brillo--dos"></span>
+    <span class="login__brillo login__brillo--tres"></span>
+  </div>
+
+  <section class="login__tarjeta">
+    <div class="login__marca">
+      <span class="login__logo">P</span>
+      <span class="login__nombre">Pro POS</span>
+    </div>
+
+    <h1 class="login__titulo">
+      {{ modoRegistro() ? 'Crea tu cuenta' : 'Bienvenido de nuevo' }}
+    </h1>
+    <p class="login__subtitulo">
+      {{
+        modoRegistro()
+          ? 'Registrate para acceder a tu panel de control'
+          : 'Ingresa tus credenciales para continuar'
+      }}
+    </p>
+
+    @if (error(); as mensaje) {
+      <div class="login__alerta" role="alert">
+        <svg
+          class="login__alerta-icono"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        <span>{{ mensaje }}</span>
+      </div>
+    }
+
+    <form [formGroup]="formulario" (ngSubmit)="enviarLocal()" novalidate>
+      <div class="login__campo">
+        <label class="login__etiqueta" for="userName">Usuario</label>
+        <div
+          class="login__control"
+          [class.login__control--invalid]="
+            formulario.controls.userName.invalid &&
+            formulario.controls.userName.touched
+          "
+        >
+          <svg
+            class="login__icono"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          <input
+            id="userName"
+            class="login__input"
+            type="text"
+            formControlName="userName"
+            autocomplete="username"
+            placeholder="tu_usuario"
+          />
+        </div>
+        @if (
+          formulario.controls.userName.invalid &&
+          formulario.controls.userName.touched
+        ) {
+          <p class="login__error">
+            El usuario es obligatorio (mínimo 3 caracteres).
+          </p>
+        }
+      </div>
+
+      <div class="login__campo">
+        <label class="login__etiqueta" for="password">Contraseña</label>
+        <div
+          class="login__control"
+          [class.login__control--invalid]="
+            formulario.controls.password.invalid &&
+            formulario.controls.password.touched
+          "
+        >
+          <svg
+            class="login__icono"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+          <input
+            id="password"
+            class="login__input"
+            [type]="verPassword() ? 'text' : 'password'"
+            formControlName="password"
+            [autocomplete]="modoRegistro() ? 'new-password' : 'current-password'"
+            placeholder="••••••••"
+          />
+          <button
+            class="login__ver"
+            type="button"
+            (click)="alternarVisibilidad()"
+            [attr.aria-label]="
+              verPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'
+            "
+          >
+            @if (verPassword()) {
+              <svg
+                class="login__icono"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M17.94 17.94A10.07 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"
+                />
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                <line x1="1" y1="1" x2="23" y2="23" />
+              </svg>
+            } @else {
+              <svg
+                class="login__icono"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            }
+          </button>
+        </div>
+        @if (
+          formulario.controls.password.invalid &&
+          formulario.controls.password.touched
+        ) {
+          <p class="login__error">
+            @if (modoRegistro()) {
+              La contraseña debe tener al menos 8 caracteres.
+            } @else {
+              La contraseña es obligatoria.
+            }
+          </p>
+        }
+      </div>
+
+      <button class="login__enviar" type="submit" [disabled]="enviando()">
+        @if (enviando()) {
+          <span class="login__spinner" aria-hidden="true"></span>
+          <span>Procesando...</span>
+        } @else {
+          <span>{{ modoRegistro() ? 'Crear cuenta' : 'Iniciar sesión' }}</span>
+          <svg
+            class="login__enviar-icono"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+        }
+      </button>
+    </form>
+
+    <p class="login__cambio">
+      {{ modoRegistro() ? '¿Ya tienes una cuenta?' : '¿No tienes una cuenta?' }}
+      <button class="login__cambio-enlace" type="button" (click)="alternarModoLocal()">
+        {{ modoRegistro() ? 'Inicia sesión' : 'Regístrate' }}
+      </button>
+    </p>
+  </section>
+</main>

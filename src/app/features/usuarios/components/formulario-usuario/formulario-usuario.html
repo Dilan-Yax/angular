@@ -1,0 +1,137 @@
+<div class="seccion">
+  <div class="seccion__cabecera">
+    <h3 class="seccion__titulo">
+      {{ usuario() ? 'Editar usuario' : 'Nuevo usuario' }}
+    </h3>
+    <span class="seccion__detalle">
+      Los campos con * son obligatorios
+    </span>
+  </div>
+
+  @if (error(); as mensaje) {
+    <div class="form-alerta" role="alert">
+      <svg class="form-alerta__icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+      <span>{{ mensaje }}</span>
+    </div>
+  }
+
+  <form [formGroup]="formulario" (ngSubmit)="enviarLocal()" novalidate>
+    <div class="row g-3">
+      <div class="col-12 col-md-6">
+        <label class="form-etiqueta" for="nombre">Nombre *</label>
+        <input
+          id="nombre"
+          class="form-input"
+          [class.form-input--invalid]="esInvalido('nombre')"
+          type="text"
+          formControlName="nombre"
+          placeholder="Nombre"
+          autocomplete="given-name"
+        />
+        @if (esInvalido('nombre')) {
+          <p class="form-error">El nombre es obligatorio (máximo 100 caracteres).</p>
+        }
+      </div>
+
+      <div class="col-12 col-md-6">
+        <label class="form-etiqueta" for="apellido">Apellido *</label>
+        <input
+          id="apellido"
+          class="form-input"
+          [class.form-input--invalid]="esInvalido('apellido')"
+          type="text"
+          formControlName="apellido"
+          placeholder="Apellido"
+          autocomplete="family-name"
+        />
+        @if (esInvalido('apellido')) {
+          <p class="form-error">El apellido es obligatorio (máximo 100 caracteres).</p>
+        }
+      </div>
+
+      <div class="col-12 col-md-6">
+        <label class="form-etiqueta" for="userName">Username *</label>
+        <input
+          id="userName"
+          class="form-input"
+          [class.form-input--invalid]="esInvalido('userName')"
+          type="text"
+          formControlName="userName"
+          placeholder="usuario_sistema"
+          autocomplete="username"
+        />
+        @if (esInvalido('userName')) {
+          <p class="form-error">El username es obligatorio (mínimo 3, máximo 50 caracteres).</p>
+        }
+      </div>
+
+      <div class="col-12 col-md-6">
+        <label class="form-etiqueta" for="email">Email *</label>
+        <input
+          id="email"
+          class="form-input"
+          [class.form-input--invalid]="esInvalido('email')"
+          type="email"
+          formControlName="email"
+          placeholder="usuario@correo.com"
+          autocomplete="email"
+        />
+        @if (esInvalido('email')) {
+          <p class="form-error">Ingresa un correo válido (máximo 150 caracteres).</p>
+        }
+      </div>
+
+      <div class="col-12 col-md-6">
+        <label class="form-etiqueta" for="rolId">Rol *</label>
+        <select
+          id="rolId"
+          class="form-input"
+          [class.form-input--invalid]="esInvalido('rolId')"
+          formControlName="rolId"
+        >
+          <option [ngValue]="null" disabled>Selecciona un rol</option>
+          @for (rol of roles; track rol.id) {
+            <option [ngValue]="rol.id">{{ rol.nombre }}</option>
+          }
+        </select>
+        @if (esInvalido('rolId')) {
+          <p class="form-error">Selecciona un rol.</p>
+        }
+      </div>
+
+      <div class="col-12 col-md-6">
+        <label class="form-etiqueta" for="password">
+          Contraseña {{ usuario() ? '' : '*' }}
+        </label>
+        <input
+          id="password"
+          class="form-input"
+          [class.form-input--invalid]="esInvalido('password')"
+          type="password"
+          formControlName="password"
+          [placeholder]="usuario() ? 'Dejar en blanco para no cambiar' : 'Mínimo 8 caracteres'"
+          autocomplete="new-password"
+        />
+        @if (esInvalido('password')) {
+          <p class="form-error">La contraseña es obligatoria (mínimo 8 caracteres).</p>
+        }
+      </div>
+    </div>
+
+    <div class="form-acciones">
+      <button class="btn-secundario" type="button" (click)="onCancelar()">Cancelar</button>
+      <button class="btn-primario" type="submit" [disabled]="guardando()">
+        @if (guardando()) {
+          <span class="btn-spinner" aria-hidden="true"></span>
+          <span>Guardando...</span>
+        } @else {
+          <span>{{ usuario() ? 'Guardar cambios' : 'Crear usuario' }}</span>
+        }
+      </button>
+    </div>
+  </form>
+</div>

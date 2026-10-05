@@ -1,0 +1,127 @@
+<div class="table-responsive">
+  <table class="tabla align-middle">
+    <thead>
+      <tr>
+        <th scope="col">
+          <button
+            class="tabla__orden"
+            type="button"
+            (click)="ordenar.emit('nombre')"
+            [attr.aria-sort]="ariaSort('nombre')"
+          >
+            Usuario {{ indicadorSort('nombre') }}
+          </button>
+        </th>
+        <th scope="col">
+          <button
+            class="tabla__orden"
+            type="button"
+            (click)="ordenar.emit('rol')"
+            [attr.aria-sort]="ariaSort('rol')"
+          >
+            Rol {{ indicadorSort('rol') }}
+          </button>
+        </th>
+        <th scope="col">Email</th>
+        <th scope="col">Último login</th>
+        <th scope="col">
+          <button
+            class="tabla__orden"
+            type="button"
+            (click)="ordenar.emit('fecha')"
+            [attr.aria-sort]="ariaSort('fecha')"
+          >
+            Registro {{ indicadorSort('fecha') }}
+          </button>
+        </th>
+        <th scope="col" class="text-center">Estado</th>
+        <th scope="col" class="text-end">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (usuario of usuarios; track usuario.id) {
+        <tr>
+          <td>
+            <span class="tabla__nombre">
+              {{ usuario.nombre }} {{ usuario.apellido }}
+            </span>
+            <span class="tabla__descripcion">@{{ usuario.userName }}</span>
+          </td>
+          <td>
+            <span class="tabla__categoria">{{ usuario.rolNombre }}</span>
+          </td>
+          <td><span class="tabla__descripcion">{{ usuario.email }}</span></td>
+          <td>
+            <span class="tabla__descripcion">
+              {{ usuario.ultimoLogin ? (usuario.ultimoLogin | date: 'dd/MM/yyyy HH:mm') : '—' }}
+            </span>
+          </td>
+          <td>
+            <span class="tabla__descripcion">
+              {{ usuario.createdAtUtc | date: 'dd/MM/yyyy' }}
+            </span>
+          </td>
+          <td class="text-center">
+            <span
+              class="estado"
+              [class.estado--ok]="usuario.isActive"
+              [class.estado--alerta]="!usuario.isActive"
+            >{{ usuario.isActive ? 'Activo' : 'Inactivo' }}</span>
+          </td>
+          <td class="text-end">
+            <div class="acciones">
+              <button
+                class="btn-accion"
+                type="button"
+                (click)="verDetalle.emit(usuario.id)"
+                [attr.aria-label]="'Ver detalle de ' + usuario.userName"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <span class="visually-hidden">Ver</span>
+              </button>
+
+              <button
+                class="btn-accion btn-accion--editar"
+                type="button"
+                (click)="editar.emit(usuario)"
+                [attr.aria-label]="'Editar ' + usuario.userName"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 3a2.85 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5z"/>
+                </svg>
+                <span class="visually-hidden">Editar</span>
+              </button>
+
+              <button
+                class="btn-accion btn-accion--eliminar"
+                type="button"
+                (click)="desactivar.emit(usuario)"
+                [disabled]="desactivandoId === usuario.id"
+                [attr.aria-label]="'Desactivar ' + usuario.userName"
+              >
+                @if (desactivandoId === usuario.id) {
+                  <span class="btn-spinner" aria-hidden="true"></span>
+                } @else {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18.36 6.64a9 9 0 11-12.73 0"/>
+                    <line x1="12" y1="2" x2="12" y2="12"/>
+                  </svg>
+                }
+                <span class="visually-hidden">Desactivar</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="7" class="text-center">
+            <p class="seccion__vacio mb-0">No hay usuarios que coincidan con los filtros.</p>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
