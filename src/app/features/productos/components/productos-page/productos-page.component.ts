@@ -1,232 +1,179 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ProductoService } from '../../services/producto.service';
-import { ProductoDto, ProductoFilterDto } from '../../models/producto.model';
+import { CategoriaService } from '../../../categorias/services/categoria.service';
+import {
+  ActualizarProductoDto,
+  CrearProductoDto,
+  ProductoDetalleDto,
+  ProductoDto,
+  ProductoFilterDto,
+} from '../../models/producto.model';
+import { CategoriaDto } from '../../../categorias/models/categoria.model';
+import { TablaProductosComponent } from '../tabla-productos/tabla-productos.component';
+import { FiltrosProductosComponent } from '../filtros-productos/filtros-productos.component';
+import { FormularioProductoModalComponent } from '../formulario-producto-modal/formulario-producto-modal.component';
+import { PaginadorComponent } from '../../../usuarios/components/paginador/paginador.component';
 
 @Component({
   selector: 'app-productos-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    TablaProductosComponent,
+    FiltrosProductosComponent,
+    FormularioProductoModalComponent,
+    PaginadorComponent,
+  ],
   template: `
-    <div class="productos-container">
-      <!-- Encabezado -->
-      <header class="header-section">
+    <div class="productos-layout">
+      <!-- Encabezado / Panel de Control -->
+      <div class="panel-header mb-4">
         <div>
-          <h1 class="header-title">Catálogo de Productos</h1>
-          <p class="header-subtitle">
+          <h2 class="panel-titulo">Catálogo de Productos</h2>
+          <p class="panel-subtitulo">
             Gestión y control de inventario
-            <span class="total-badge">{{ totalItems() }} registrados</span>
+            <span class="badge-total">{{ totalItems() }} registrados</span>
           </p>
         </div>
-        <button type="button" class="btn-primary" (click)="onNuevoProducto()">
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-          Nuevo Producto
-        </button>
-      </header>
 
-      <!-- Barra superior de búsqueda y acciones -->
-      <div class="toolbar-section">
-        <form class="search-form" (submit)="onBuscar($event)">
-          <div class="search-input-wrapper">
-            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        <div class="header-actions">
+          <button
+            type="button"
+            class="btn-refrescar"
+            (click)="cargarProductos()"
+            [disabled]="cargando()"
+            title="Refrescar catálogo"
+          >
+            <svg class="icon-sm" [class.animate-spin]="cargando()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+              <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+              <path d="M16 21h5v-5" />
             </svg>
-            <input
-              type="text"
-              class="search-input"
-              placeholder="Buscar por código o nombre..."
-              [ngModel]="filtroNombre()"
-              (ngModelChange)="filtroNombre.set($event)"
-              name="filtroNombre"
-            />
-            @if (filtroNombre()) {
-              <button type="button" class="clear-btn" (click)="onLimpiarFiltro()" title="Limpiar filtro">
-                ×
-              </button>
-            }
-          </div>
-          <button type="submit" class="btn-secondary" [disabled]="cargando()">
-            Buscar
+            <span>Actualizar</span>
           </button>
-        </form>
 
-        <div class="toolbar-stats">
-          Página {{ paginaActual() }} de {{ totalPaginas() }}
+          <button
+            type="button"
+            class="btn-nuevo-producto"
+            (click)="abrirCrear()"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            <span>Nuevo Producto</span>
+          </button>
         </div>
       </div>
 
-      <!-- Contenedor de la Tabla y Spinner -->
-      <div class="table-container">
-        @if (cargando()) {
-          <div class="loading-overlay">
-            <div class="spinner"></div>
-            <p class="loading-text">Cargando productos...</p>
-          </div>
-        }
-
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th scope="col">Código/SKU</th>
-              <th scope="col">Nombre</th>
-              <th scope="col" class="text-right">Precio</th>
-              <th scope="col" class="text-center">Stock</th>
-              <th scope="col" class="text-center">Estado</th>
-              <th scope="col" class="text-center">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (prod of productos(); track prod.id) {
-              <tr class="table-row">
-                <td class="font-mono text-sm font-semibold text-slate-700">
-                  {{ prod.codigo || prod.sku || ('PRD-' + prod.id) }}
-                </td>
-                <td>
-                  <div class="font-medium text-slate-900">{{ prod.nombre }}</div>
-                  @if (prod.nombreCategoria) {
-                    <div class="text-xs text-slate-500">{{ prod.nombreCategoria }}</div>
-                  }
-                </td>
-                <td class="text-right font-medium text-slate-900">
-                  {{ prod.precio | currency:'USD':'symbol':'1.2-2' }}
-                </td>
-                <td class="text-center">
-                  <div class="stock-cell">
-                    <span class="font-medium">{{ prod.stockActual ?? prod.stock ?? 0 }}</span>
-                    @if (esStockBajo(prod)) {
-                      <span class="badge badge-warning">Stock bajo</span>
-                    }
-                  </div>
-                </td>
-                <td class="text-center">
-                  @if (prod.isActive ?? (prod.estado === 'disponible' || prod.estado === 'activo' || !prod.estado)) {
-                    <span class="badge badge-success">Activo</span>
-                  } @else {
-                    <span class="badge badge-danger">Inactivo</span>
-                  }
-                </td>
-                <td class="text-center">
-                  <div class="actions-group">
-                    <button
-                      type="button"
-                      class="action-btn edit-btn"
-                      title="Editar producto"
-                      (click)="onEditarProducto(prod)">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                      </svg>
-                    </button>
-                    <button
-                      type="button"
-                      class="action-btn delete-btn"
-                      title="Eliminar producto"
-                      (click)="onEliminarProducto(prod)">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                      </svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            } @empty {
-              @if (!cargando()) {
-                <tr>
-                  <td colspan="6" class="empty-state">
-                    <div class="empty-state-content">
-                      <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="8" y1="12" x2="16" y2="12" />
-                      </svg>
-                      <p class="empty-title">No se encontraron productos</p>
-                      <p class="empty-subtitle">
-                        {{ filtroNombre() ? 'Intenta con otro término de búsqueda.' : 'Agrega el primer producto al inventario.' }}
-                      </p>
-                    </div>
-                  </td>
-                </tr>
-              }
+      <!-- Alertas globales del módulo -->
+      @if (alerta()) {
+        <div class="alerta-box" [ngClass]="'alerta-box--' + alerta()?.tipo">
+          <div class="d-flex align-items-center gap-2">
+            @if (alerta()?.tipo === 'exito') {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+            } @else if (alerta()?.tipo === 'advertencia') {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            } @else {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
             }
-          </tbody>
-        </table>
+            <span>{{ alerta()?.mensaje }}</span>
+          </div>
+          <button type="button" class="btn-cerrar-alerta" (click)="alerta.set(null)">×</button>
+        </div>
+      }
+
+      <!-- Presentacional: Barra de Filtros -->
+      <app-filtros-productos
+        [categorias]="categorias()"
+        (filtrar)="onFiltrar($event)"
+        (limpiar)="onLimpiarFiltros()"
+      />
+
+      <!-- Presentacional: Tabla de Productos -->
+      <app-tabla-productos
+        [productos]="productos()"
+        [cargando]="cargando()"
+        (editar)="abrirEditar($event)"
+        (desactivar)="ejecutarDesactivar($event)"
+      />
+
+      <!-- Presentacional Transversal: Paginador Reutilizable -->
+      <div class="mt-3">
+        <app-paginador
+          [page]="paginaActual()"
+          [pageSize]="pageSize()"
+          [totalItems]="totalItems()"
+          [totalPages]="totalPages()"
+          (cambiarPagina)="cambiarPagina($event)"
+          (cambiarTamano)="cambiarTamano($event)"
+        />
       </div>
 
-      <!-- Paginador -->
-      @if (totalPaginas() > 1) {
-        <footer class="pagination-footer">
-          <div class="text-sm text-slate-500">
-            Total: {{ totalItems() }} resultados
-          </div>
-          <div class="pagination-controls">
-            <button
-              type="button"
-              class="page-btn"
-              [disabled]="paginaActual() <= 1 || cargando()"
-              (click)="cambiarPagina(paginaActual() - 1)">
-              Anterior
-            </button>
-            <span class="page-indicator">
-              {{ paginaActual() }} / {{ totalPaginas() }}
-            </span>
-            <button
-              type="button"
-              class="page-btn"
-              [disabled]="paginaActual() >= totalPaginas() || cargando()"
-              (click)="cambiarPagina(paginaActual() + 1)">
-              Siguiente
-            </button>
-          </div>
-        </footer>
-      }
+      <!-- Presentacional: Modal de Formulario (Creación / Edición / OCC 409) -->
+      <app-formulario-producto-modal
+        [visible]="modalVisible()"
+        [producto]="productoSeleccionado()"
+        [categorias]="categorias()"
+        [guardando]="guardando()"
+        [concurrenciaConflicto]="concurrenciaConflicto()"
+        (guardar)="ejecutarGuardar($event)"
+        (recargar)="ejecutarRecargar($event)"
+        (cancelar)="cerrarModal()"
+      />
     </div>
   `,
   styles: [`
-    .productos-container {
+    .productos-layout {
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
-      padding: 1.5rem;
-      max-width: 1200px;
-      margin: 0 auto;
+      padding: 0.5rem 0;
     }
 
-    .header-section {
+    .panel-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
       padding: 1.25rem 1.75rem;
-      background: #ffffff;
       border-radius: 0.85rem;
+      background: #ffffff;
       border: 1px solid #e2e8f0;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
     }
 
-    .header-title {
+    .panel-titulo {
       margin: 0;
-      font-size: 1.5rem;
+      font-size: 1.35rem;
       font-weight: 700;
       color: #0f172a;
       letter-spacing: -0.02em;
     }
 
-    .header-subtitle {
+    .panel-subtitulo {
       margin: 0.25rem 0 0;
-      font-size: 0.875rem;
+      font-size: 0.85rem;
       color: #64748b;
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
 
-    .total-badge {
+    .badge-total {
       display: inline-block;
       padding: 0.15rem 0.6rem;
       border-radius: 9999px;
@@ -236,425 +183,344 @@ import { ProductoDto, ProductoFilterDto } from '../../models/producto.model';
       font-weight: 600;
     }
 
-    .btn-primary {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.65rem 1.25rem;
-      background: #4f46e5;
-      color: #ffffff;
-      font-size: 0.875rem;
-      font-weight: 600;
-      border: none;
-      border-radius: 0.6rem;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
-      transition: all 0.2s ease;
-    }
-
-    .btn-primary:hover {
-      background: #4338ca;
-      transform: translateY(-1px);
-    }
-
-    .btn-icon {
-      width: 1.1rem;
-      height: 1.1rem;
-    }
-
-    .toolbar-section {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .search-form {
+    .header-actions {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      flex: 1;
-      max-width: 480px;
     }
 
-    .search-input-wrapper {
-      position: relative;
-      flex: 1;
-      display: flex;
-      align-items: center;
-    }
-
-    .search-icon {
-      position: absolute;
-      left: 0.85rem;
-      width: 1rem;
-      height: 1rem;
-      color: #94a3b8;
-      pointer-events: none;
-    }
-
-    .search-input {
-      width: 100%;
-      padding: 0.6rem 2.2rem 0.6rem 2.4rem;
-      font-size: 0.875rem;
+    .btn-refrescar {
+      background: #f8fafc;
       border: 1px solid #cbd5e1;
-      border-radius: 0.6rem;
-      background: #ffffff;
-      color: #1e293b;
-      outline: none;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .search-input:focus {
-      border-color: #6366f1;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-    }
-
-    .clear-btn {
-      position: absolute;
-      right: 0.75rem;
-      background: transparent;
-      border: none;
-      color: #94a3b8;
-      font-size: 1.25rem;
-      line-height: 1;
-      cursor: pointer;
-      padding: 0;
-    }
-
-    .btn-secondary {
-      padding: 0.6rem 1.1rem;
-      font-size: 0.875rem;
-      font-weight: 600;
-      background: #f1f5f9;
       color: #334155;
-      border: 1px solid #cbd5e1;
-      border-radius: 0.6rem;
+      padding: 0.55rem 1rem;
+      border-radius: 0.55rem;
+      font-size: 0.84rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
     }
 
-    .btn-secondary:hover:not(:disabled) {
-      background: #e2e8f0;
+    .btn-refrescar:hover:not(:disabled) {
+      background: #f1f5f9;
       color: #0f172a;
     }
 
-    .btn-secondary:disabled {
+    .btn-refrescar:disabled {
       opacity: 0.6;
       cursor: not-allowed;
     }
 
-    .toolbar-stats {
-      font-size: 0.85rem;
-      color: #64748b;
-    }
-
-    .table-container {
-      position: relative;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 0.85rem;
-      overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-      min-height: 250px;
-    }
-
-    .loading-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(255, 255, 255, 0.75);
-      backdrop-filter: blur(2px);
-      display: flex;
-      flex-direction: column;
+    .btn-nuevo-producto {
+      background: #4f46e5;
+      color: #ffffff;
+      border: none;
+      padding: 0.6rem 1.25rem;
+      border-radius: 0.55rem;
+      font-size: 0.86rem;
+      font-weight: 700;
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
-      z-index: 10;
+      gap: 0.5rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+      transition: all 0.18s ease;
     }
 
-    .spinner {
-      width: 2.2rem;
-      height: 2.2rem;
-      border: 3px solid #e2e8f0;
-      border-top-color: #4f46e5;
-      border-radius: 50%;
+    .btn-nuevo-producto svg {
+      width: 1.1rem;
+      height: 1.1rem;
+    }
+
+    .btn-nuevo-producto:hover {
+      background: #4338ca;
+    }
+
+    .icon-sm {
+      width: 1rem;
+      height: 1rem;
+    }
+
+    .animate-spin {
       animation: spin 0.8s linear infinite;
     }
 
-    .loading-text {
-      margin-top: 0.75rem;
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: #4f46e5;
+    .alerta-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.85rem 1.25rem;
+      border-radius: 0.65rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      border: 1px solid transparent;
+    }
+
+    .alerta-box svg {
+      width: 1.2rem;
+      height: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .alerta-box--exito {
+      background: rgba(16, 185, 129, 0.1);
+      border-color: rgba(16, 185, 129, 0.25);
+      color: #065f46;
+    }
+
+    .alerta-box--advertencia {
+      background: #fffbeb;
+      border-color: #fde68a;
+      color: #92400e;
+    }
+
+    .alerta-box--error {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.25);
+      color: #991b1b;
+    }
+
+    .btn-cerrar-alerta {
+      background: transparent;
+      border: none;
+      font-size: 1.3rem;
+      color: currentColor;
+      opacity: 0.7;
+      cursor: pointer;
+      line-height: 1;
     }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-    }
-
-    .data-table th {
-      padding: 0.85rem 1.25rem;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #475569;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      background: #f8fafc;
-      border-bottom: 1px solid #e2e8f0;
-    }
-
-    .data-table td {
-      padding: 1rem 1.25rem;
-      font-size: 0.875rem;
-      color: #334155;
-      border-bottom: 1px solid #f1f5f9;
-      vertical-align: middle;
-    }
-
-    .table-row:hover {
-      background-color: #f8fafc;
-    }
-
-    .text-right { text-align: right; }
-    .text-center { text-align: center; }
-
-    .stock-cell {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      justify-content: center;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 0.2rem 0.55rem;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      line-height: 1;
-    }
-
-    .badge-success {
-      background: #dcfce7;
-      color: #15803d;
-    }
-
-    .badge-danger {
-      background: #fee2e2;
-      color: #b91c1c;
-    }
-
-    .badge-warning {
-      background: #fef3c7;
-      color: #b45309;
-    }
-
-    .actions-group {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .action-btn {
-      width: 2rem;
-      height: 2rem;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 0.45rem;
-      border: 1px solid transparent;
-      background: transparent;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .action-btn svg {
-      width: 1rem;
-      height: 1rem;
-    }
-
-    .edit-btn {
-      color: #2563eb;
-    }
-    .edit-btn:hover {
-      background: #eff6ff;
-      border-color: #bfdbfe;
-    }
-
-    .delete-btn {
-      color: #dc2626;
-    }
-    .delete-btn:hover {
-      background: #fef2f2;
-      border-color: #fecaca;
-    }
-
-    .empty-state {
-      padding: 3.5rem 1rem !important;
-      text-align: center;
-    }
-
-    .empty-state-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-    }
-
-    .empty-icon {
-      width: 2.75rem;
-      height: 2.75rem;
-      color: #94a3b8;
-    }
-
-    .empty-title {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #334155;
-      margin: 0;
-    }
-
-    .empty-subtitle {
-      font-size: 0.85rem;
-      color: #64748b;
-      margin: 0;
-    }
-
-    .pagination-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      padding: 0.5rem 0.25rem;
-      flex-wrap: wrap;
-    }
-
-    .pagination-controls {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .page-btn {
-      padding: 0.45rem 0.85rem;
-      font-size: 0.85rem;
-      font-weight: 500;
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      border-radius: 0.5rem;
-      color: #334155;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .page-btn:hover:not(:disabled) {
-      background: #f8fafc;
-      border-color: #94a3b8;
-    }
-
-    .page-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .page-indicator {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #475569;
-    }
-  `]
+  `],
 })
 export class ProductosPageComponent implements OnInit {
-  private productoService = inject(ProductoService);
+  private readonly productoService = inject(ProductoService);
+  private readonly categoriaService = inject(CategoriaService);
 
-  // Signals requeridos
-  productos = signal<ProductoDto[]>([]);
-  totalItems = signal<number>(0);
-  cargando = signal<boolean>(false);
-  filtroNombre = signal<string>('');
-  paginaActual = signal<number>(1);
-  pageSize = signal<number>(10);
+  // Signals de Estado
+  readonly productos = signal<ProductoDto[]>([]);
+  readonly totalItems = signal<number>(0);
+  readonly totalPages = signal<number>(1);
+  readonly cargando = signal<boolean>(false);
+  readonly guardando = signal<boolean>(false);
+  readonly paginaActual = signal<number>(1);
+  readonly pageSize = signal<number>(10);
+  readonly filtrosActuales = signal<ProductoFilterDto>({});
+  readonly categorias = signal<CategoriaDto[]>([]);
 
-  // Computeds auxiliares
-  totalPaginas = computed(() => {
-    const total = this.totalItems();
-    const size = this.pageSize();
-    return Math.max(1, Math.ceil(total / size));
-  });
+  // Signals de Modal y Concurrencia (OCC)
+  readonly modalVisible = signal<boolean>(false);
+  readonly productoSeleccionado = signal<ProductoDetalleDto | null>(null);
+  readonly concurrenciaConflicto = signal<boolean>(false);
+
+  // Alerta informativa
+  readonly alerta = signal<{ tipo: 'exito' | 'error' | 'advertencia'; mensaje: string } | null>(null);
 
   ngOnInit(): void {
+    this.cargarCategorias();
     this.cargarProductos();
+  }
+
+  async cargarCategorias(): Promise<void> {
+    try {
+      const res = await firstValueFrom(this.categoriaService.getCategorias());
+      this.categorias.set(res ?? []);
+    } catch (err) {
+      console.error('Error al cargar categorías para filtro:', err);
+    }
   }
 
   async cargarProductos(): Promise<void> {
     this.cargando.set(true);
     try {
+      const f = this.filtrosActuales();
       const res = await firstValueFrom(
         this.productoService.getProductos({
           pageNumber: this.paginaActual(),
           pageSize: this.pageSize(),
-          search: this.filtroNombre() || undefined,
+          searchTerm: f.searchTerm,
+          categoriaId: f.categoriaId,
+          isActive: f.isActive,
+          soloStockBajo: f.soloStockBajo,
         })
       );
       const items = res?.items ?? [];
       this.productos.set(items);
       this.totalItems.set(res?.totalCount ?? 0);
+      this.totalPages.set(
+        res?.totalPages ?? Math.max(1, Math.ceil((res?.totalCount ?? 0) / this.pageSize()))
+      );
     } catch (error) {
       console.error('Error al cargar productos:', error);
       this.productos.set([]);
       this.totalItems.set(0);
+      this.totalPages.set(1);
+      this.alerta.set({
+        tipo: 'error',
+        mensaje: 'Error al conectar con el servidor para obtener los productos.',
+      });
     } finally {
       this.cargando.set(false);
     }
   }
 
-  onBuscar(event?: Event): void {
-    if (event) {
-      event.preventDefault();
-    }
+  onFiltrar(filtro: ProductoFilterDto): void {
+    this.filtrosActuales.set(filtro);
     this.paginaActual.set(1);
     this.cargarProductos();
   }
 
-  onLimpiarFiltro(): void {
-    this.filtroNombre.set('');
+  onLimpiarFiltros(): void {
+    this.filtrosActuales.set({});
     this.paginaActual.set(1);
     this.cargarProductos();
   }
 
   cambiarPagina(nuevaPagina: number): void {
-    if (nuevaPagina >= 1 && nuevaPagina <= this.totalPaginas() && nuevaPagina !== this.paginaActual()) {
+    if (nuevaPagina >= 1 && nuevaPagina <= this.totalPages() && nuevaPagina !== this.paginaActual()) {
       this.paginaActual.set(nuevaPagina);
       this.cargarProductos();
     }
   }
 
-  esStockBajo(prod: ProductoDto): boolean {
-    if (prod.stockBajo !== undefined && prod.stockBajo !== null) {
-      return prod.stockBajo;
+  cambiarTamano(nuevoTamano: number): void {
+    if (nuevoTamano !== this.pageSize()) {
+      this.pageSize.set(nuevoTamano);
+      this.paginaActual.set(1);
+      this.cargarProductos();
     }
-    const stock = prod.stockActual ?? prod.stock ?? 0;
-    const min = prod.stockMinimo ?? 5;
-    return stock <= min;
   }
 
-  onNuevoProducto(): void {
-    console.log('Nuevo producto solicitado');
+  abrirCrear(): void {
+    this.productoSeleccionado.set(null);
+    this.concurrenciaConflicto.set(false);
+    this.modalVisible.set(true);
   }
 
-  onEditarProducto(prod: ProductoDto): void {
-    console.log('Editar producto:', prod);
+  async abrirEditar(id: number): Promise<void> {
+    this.cargando.set(true);
+    try {
+      const detalle = await firstValueFrom(this.productoService.getProducto(id));
+      this.productoSeleccionado.set(detalle);
+      this.concurrenciaConflicto.set(false);
+      this.modalVisible.set(true);
+    } catch (err) {
+      console.error('Error al cargar detalle del producto:', err);
+      this.alerta.set({
+        tipo: 'error',
+        mensaje: 'No fue posible obtener el detalle del producto para editar.',
+      });
+    } finally {
+      this.cargando.set(false);
+    }
   }
 
-  onEliminarProducto(prod: ProductoDto): void {
-    console.log('Eliminar producto:', prod);
+  cerrarModal(): void {
+    this.modalVisible.set(false);
+    this.productoSeleccionado.set(null);
+    this.concurrenciaConflicto.set(false);
+  }
+
+  async ejecutarGuardar(event: {
+    id?: number;
+    data: CrearProductoDto | ActualizarProductoDto;
+  }): Promise<void> {
+    this.guardando.set(true);
+    this.alerta.set(null);
+
+    try {
+      if (event.id) {
+        // Actualización con OCC
+        await firstValueFrom(
+          this.productoService.actualizarProducto(event.id, event.data as ActualizarProductoDto)
+        );
+        this.modalVisible.set(false);
+        this.productoSeleccionado.set(null);
+        this.concurrenciaConflicto.set(false);
+        this.alerta.set({
+          tipo: 'exito',
+          mensaje: '¡Producto actualizado correctamente!',
+        });
+      } else {
+        // Creación
+        await firstValueFrom(
+          this.productoService.crearProducto(event.data as CrearProductoDto)
+        );
+        this.modalVisible.set(false);
+        this.productoSeleccionado.set(null);
+        this.alerta.set({
+          tipo: 'exito',
+          mensaje: '¡Producto registrado con éxito!',
+        });
+      }
+      await this.cargarProductos();
+    } catch (err: any) {
+      console.error('Error al guardar producto:', err);
+      // Captura de Concurrencia Optimista (OCC 409)
+      if (err.status === 409) {
+        this.concurrenciaConflicto.set(true);
+        this.alerta.set({
+          tipo: 'advertencia',
+          mensaje:
+            'Conflicto de concurrencia: El producto fue modificado por otro usuario. Debes recargar los datos antes de continuar.',
+        });
+      } else {
+        const detalle =
+          err.error?.detail || err.error?.title || 'No se pudo guardar el producto.';
+        this.alerta.set({
+          tipo: 'error',
+          mensaje: `Error al guardar producto: ${detalle}`,
+        });
+      }
+    } finally {
+      this.guardando.set(false);
+    }
+  }
+
+  async ejecutarRecargar(id: number): Promise<void> {
+    try {
+      this.cargando.set(true);
+      const prodFresco = await firstValueFrom(this.productoService.getProducto(id));
+      this.productoSeleccionado.set(prodFresco);
+      this.concurrenciaConflicto.set(false);
+      this.alerta.set({
+        tipo: 'exito',
+        mensaje: 'Datos recargados con la versión más reciente del servidor.',
+      });
+    } catch (err) {
+      console.error('Error al recargar producto:', err);
+      this.alerta.set({
+        tipo: 'error',
+        mensaje: 'No fue posible recargar la información del producto.',
+      });
+    } finally {
+      this.cargando.set(false);
+    }
+  }
+
+  async ejecutarDesactivar(id: number): Promise<void> {
+    try {
+      await firstValueFrom(this.productoService.desactivarProducto(id));
+      this.alerta.set({
+        tipo: 'exito',
+        mensaje: 'Producto desactivado correctamente.',
+      });
+      await this.cargarProductos();
+    } catch (err: any) {
+      console.error('Error al desactivar producto:', err);
+      const detalle =
+        err.error?.detail || err.error?.title || 'No se pudo desactivar el producto.';
+      this.alerta.set({
+        tipo: 'error',
+        mensaje: `Error al desactivar producto: ${detalle}`,
+      });
+    }
   }
 }

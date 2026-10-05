@@ -1,15 +1,22 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ProductoDto, ProductoFilterDto, PagedResultDto } from '../models/producto.model';
+import {
+  ActualizarProductoDto,
+  CrearProductoDto,
+  PagedResultDto,
+  ProductoDetalleDto,
+  ProductoDto,
+  ProductoFilterDto,
+} from '../models/producto.model';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ProductoService {
-  private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/productos`;
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = `${environment.apiUrl}/productos`;
 
   getProductos(
     filtro?: ProductoFilterDto | { [key: string]: any }
@@ -47,8 +54,34 @@ export class ProductoService {
       if (soloStockBajo !== undefined && soloStockBajo !== null) {
         params = params.set('SoloStockBajo', soloStockBajo.toString());
       }
+
+      const sortBy = f['sortBy'];
+      if (sortBy) {
+        params = params.set('SortBy', sortBy);
+      }
+
+      const isAscending = f['isAscending'];
+      if (isAscending !== undefined && isAscending !== null) {
+        params = params.set('IsAscending', isAscending.toString());
+      }
     }
 
     return this.http.get<PagedResultDto<ProductoDto>>(this.apiUrl, { params });
+  }
+
+  getProducto(id: number): Observable<ProductoDetalleDto> {
+    return this.http.get<ProductoDetalleDto>(`${this.apiUrl}/${id}`);
+  }
+
+  crearProducto(dto: CrearProductoDto): Observable<ProductoDetalleDto> {
+    return this.http.post<ProductoDetalleDto>(this.apiUrl, dto);
+  }
+
+  actualizarProducto(id: number, dto: ActualizarProductoDto): Observable<ProductoDetalleDto> {
+    return this.http.put<ProductoDetalleDto>(`${this.apiUrl}/${id}`, dto);
+  }
+
+  desactivarProducto(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }

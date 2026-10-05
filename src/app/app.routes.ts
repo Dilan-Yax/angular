@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { Login } from './features/auth/components/login/login';
 import { Dashboard } from './components/dashboard/dashboard';
 import { authGuard } from './features/auth/guards/auth.guard';
+import { adminGuard } from './features/auth/guards/admin.guard';
 import { ClientesPageComponent } from './features/clientes/components/clientes-page/clientes-page.component';
 import {
   UsuariosPageComponent,
@@ -21,7 +22,22 @@ export const routes: Routes = [
       ),
     canActivate: [authGuard],
   },
-  { path: 'ventas', component: PlaceholderComponent, canActivate: [authGuard] },
+  {
+    path: 'categorias',
+    loadComponent: () =>
+      import('./features/categorias/components/categorias-page/categorias-page.component').then(
+        (m) => m.CategoriasPageComponent
+      ),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'ventas',
+    loadComponent: () =>
+      import('./features/ventas/components/registro-ventas-page/registro-ventas-page.component').then(
+        (m) => m.RegistroVentasPageComponent
+      ),
+    canActivate: [authGuard],
+  },
   {
     path: 'caja',
     loadComponent: () =>
@@ -37,7 +53,21 @@ export const routes: Routes = [
     canActivate: [authGuard],
     canDeactivate: [salirConFormularioLimpio],
   },
-  { path: 'reportes', component: PlaceholderComponent, canActivate: [authGuard] },
-  { path: 'auditoria', component: PlaceholderComponent, canActivate: [authGuard] },
+  {
+    path: 'reportes',
+    loadComponent: () =>
+      import('./features/reportes/components/reportes-page/reportes-page.component').then(
+        (m) => m.ReportesPageComponent
+      ),
+    canActivate: [adminGuard],
+  },
+  {
+    path: 'auditoria',
+    loadComponent: () =>
+      import('./features/auditoria/components/auditoria-page/auditoria-page.component').then(
+        (m) => m.AuditoriaPageComponent
+      ),
+    canActivate: [adminGuard],
+  },
   { path: '**', redirectTo: '' },
 ];

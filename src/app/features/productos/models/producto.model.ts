@@ -1,9 +1,3 @@
-export interface Producto {
-  id: number;
-  nombre: string;
-  precio: number;
-}
-
 export interface ProductoDto {
   id: number;
   idCategoria?: number;
@@ -19,6 +13,44 @@ export interface ProductoDto {
   stockBajo?: boolean;
   isActive?: boolean;
   estado?: string;
+}
+
+export interface ProductoDetalleDto {
+  id: number;
+  idCategoria: number;
+  nombreCategoria: string;
+  codigo: string;
+  nombre: string;
+  descripcion?: string;
+  precio: number;
+  stockActual: number;
+  stockMinimo: number;
+  stockBajo: boolean;
+  isActive: boolean;
+  createdAtUtc: string;
+  updatedAtUtc?: string;
+  version: number;
+}
+
+export interface CrearProductoDto {
+  idCategoria: number;
+  codigo: string;
+  nombre: string;
+  descripcion?: string;
+  precio: number;
+  stockActual: number;
+  stockMinimo: number;
+}
+
+export interface ActualizarProductoDto {
+  idCategoria: number;
+  codigo: string;
+  nombre: string;
+  descripcion?: string;
+  precio: number;
+  stockActual: number;
+  stockMinimo: number;
+  version?: number;
 }
 
 export interface ProductoFilterDto {
